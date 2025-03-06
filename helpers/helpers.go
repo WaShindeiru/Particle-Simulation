@@ -33,3 +33,9 @@ func (v *MyVect2) Dot(other *MyVect2) float64 {
 type Copiable interface {
 	Copy() Copiable
 }
+
+func Assert(condition bool, message string) {
+	if !condition {
+		panic(message)
+	}
+}

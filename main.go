@@ -2,34 +2,40 @@ package main
 
 import (
 	circle2 "collision/circle"
-	"fmt"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"image/color"
 	_ "image/png"
 	"log"
 )
 
 const (
-	screenWidth  = 1700
-	screenHeight = 900
+	//screenWidth  = 1700
+	//screenHeight = 900
 	//screenWidth  = 300
 	//screenHeight = 300
 	//screenWidth  = 640
 	//screenHeight = 480
 	//screenWidth  = 1280
 	//screenHeight = 720
+	screenWidth  = 1900
+	screenHeight = 1000
 )
 
 func init() {
 }
 
-type Game[T circle2.Circle] struct {
-	context *circle2.SimulationContext[T]
+type Runnable interface {
+	Update() error
+	Draw(screen *ebiten.Image)
 }
 
-func NewGame(circlesNum int) *Game[*circle2.BasicCircle] {
-	return &Game[*circle2.BasicCircle]{
-		context: circle2.NewContext(circlesNum, screenWidth, screenHeight),
+type Game struct {
+	context Runnable
+}
+
+func NewGame(circlesNum int) *Game {
+	return &Game{
+		context: circle2.NewContextGame(circlesNum, screenWidth, screenHeight),
 	}
 }
 
@@ -39,51 +45,53 @@ func NewGame(circlesNum int) *Game[*circle2.BasicCircle] {
 //	}
 //}
 
-func (g *Game[T]) Update() error {
+func (g *Game) Update() error {
 	//cont := g.context.GetCurrentIteration()
 	//g.context.BeginNewIteration()
 	//cont.UpdateConcurrent()
-	g.context.UpdateSingle()
+	g.context.Update()
 
 	return nil
 }
 
-func (g *Game[T]) Draw(screen *ebiten.Image) {
+func (g *Game) Draw(screen *ebiten.Image) {
 	//screen.Fill(color.RGBA{0x99, 0xcc, 0xff, 0xff})
-	cont := g.context.GetCurrentIteration()
-	cont.Draw(screen)
+	//cont := g.context.GetCurrentIteration()
+	//cont.Draw(screen)
 	//for e := g.sprites.Front(); e != nil; e = e.Next() {
 	//	s := e.Value.(*sprite)
 	//	s.draw(screen)
 	//}
-
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS: %0.2f\nFPS: %0.2f\nEnergy: %f\n", ebiten.ActualTPS(),
-		ebiten.ActualFPS(), cont.KineticEnergy()))
+	img := ebiten.NewImage(screenWidth, screenHeight)
+	img.Fill(color.RGBA{R: 128, G: 222, B: 234, A: 0})
+	op := &ebiten.DrawImageOptions{}
+	screen.DrawImage(img, op)
+	g.context.Draw(screen)
 	//fmt.Println(g.circles.KineticEnergy())
 	//ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS: %0.2f\nSprites: %d", ebiten.ActualTPS(), g.sprites.Len()))
 }
 
-func (g *Game[T]) Layout(outsideWidth, outsideHeight int) (int, int) {
+func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return screenWidth, screenHeight
 }
 
-func test() {
-	temp := &Game[*circle2.BasicCircle]{
-		context: circle2.NewContextEmpty(screenWidth, screenHeight),
-	}
-	var temp_ *circle2.BasicCircle
-	temp_ = circle2.GetInstance().GetCircle(16, screenWidth, screenHeight, 200., 124., -5., 0.)
-	temp.context.State[temp_.GetId()] = temp_
-	temp_ = circle2.GetInstance().GetCircle(16, screenWidth, screenHeight, 300., 124., 4., 0.)
-	temp.context.State[temp_.GetId()] = temp_
-	temp_ = circle2.GetInstance().GetCircle(16, screenWidth, screenHeight, 200., 184., -2., 0.)
-	temp.context.State[temp_.GetId()] = temp_
-	//temp_ = circle2.GetInstance().GetCircle(16, screenWidth, screenHeight, 200., 184., 7., 0.)
-	//temp.context.State[temp_.GetId()] = temp_
-	if err := ebiten.RunGame(temp); err != nil {
-		log.Fatal(err)
-	}
-}
+//func test() {
+//	temp := &Game{
+//		context: circle2.NewContextEmpty(screenWidth, screenHeight),
+//	}
+//	var temp_ *circle2.BasicCircle
+//	temp_ = circle2.GetInstance().GetCircle(16, screenWidth, screenHeight, 200., 124., -5., 0.)
+//	temp.context.State[temp_.GetId()] = temp_
+//	temp_ = circle2.GetInstance().GetCircle(16, screenWidth, screenHeight, 300., 124., 4., 0.)
+//	temp.context.State[temp_.GetId()] = temp_
+//	temp_ = circle2.GetInstance().GetCircle(16, screenWidth, screenHeight, 200., 184., -2., 0.)
+//	temp.context.State[temp_.GetId()] = temp_
+//	//temp_ = circle2.GetInstance().GetCircle(16, screenWidth, screenHeight, 200., 184., 7., 0.)
+//	//temp.context.State[temp_.GetId()] = temp_
+//	if err := ebiten.RunGame(temp); err != nil {
+//		log.Fatal(err)
+//	}
+//}
 
 func main() {
 	ebiten.SetWindowSize(screenWidth, screenHeight)
@@ -97,7 +105,7 @@ func main() {
 	//	log.Fatal(err)
 	//}
 
-	if err := ebiten.RunGame(NewGame(1000)); err != nil {
+	if err := ebiten.RunGame(NewGame(50)); err != nil {
 		log.Fatal(err)
 	}
 	//test()

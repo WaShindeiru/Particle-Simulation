@@ -22,4 +22,5 @@ type Circle interface {
 	//ElasticCollision(Circle)
 	helpers.Copiable
 	setVel(helpers.MyVect2)
+	GetLimits() *helpers.MyVect2
 }

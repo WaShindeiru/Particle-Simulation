@@ -2,6 +2,9 @@ package circle
 
 import (
 	"errors"
+	"fmt"
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"sync"
 )
 
@@ -25,6 +28,14 @@ func (context *SimulationContext[A]) SetUpdatedCircles(updated []A) {
 	context.updatedCircles = updated
 }
 
+func (context *SimulationContext[A]) Draw(screen *ebiten.Image) {
+	cont := context.GetCurrentIteration()
+	cont.Draw(screen)
+
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS: %0.2f\nFPS: %0.2f\nEnergy: %f\n", ebiten.ActualTPS(),
+		ebiten.ActualFPS(), cont.KineticEnergy()))
+}
+
 func (context *SimulationContext[A]) UpdateSingle() {
 	context.iteration++
 	context.buffer = make(StateMap[A])
@@ -42,21 +53,24 @@ func (context *SimulationContext[A]) UpdateSingle() {
 	context.buffer = nil
 }
 
-func (context *SimulationContext[A]) Update() {
-	context.iteration++
-	context.buffer = make(StateMap[A])
-	cont := context.GetCurrentIteration()
-	cont.UpdateConcurrent()
+func (context *SimulationContext[A]) Update() error {
+	context.UpdateSingle()
+	//context.iteration++
+	//context.buffer = make(StateMap[A])
+	//cont := context.GetCurrentIteration()
+	//cont.UpdateConcurrent()
+	//
+	//for _, circ := range context.updatedCircles {
+	//	id := circ.GetId()
+	//	if _, exists := context.buffer[id]; !exists {
+	//		context.buffer[id] = circ
+	//	}
+	//}
+	//
+	//context.State = context.buffer
+	//context.buffer = nil
 
-	for _, circ := range context.updatedCircles {
-		id := circ.GetId()
-		if _, exists := context.buffer[id]; !exists {
-			context.buffer[id] = circ
-		}
-	}
-
-	context.State = context.buffer
-	context.buffer = nil
+	return nil
 }
 
 func (context *SimulationContext[A]) Exists(id CircleId) bool {
@@ -136,14 +150,6 @@ func NewContext(size_ int, screenWidth int, screenHeight int) *SimulationContext
 		state_[circle.GetId()] = circle
 	}
 
-	return &SimulationContext[*BasicCircle]{
-		State:     state_,
-		iteration: 1,
-	}
-}
-
-func NewContextEmpty(screenWidth int, screenHeight int) *SimulationContext[*BasicCircle] {
-	state_ := make(StateMap[*BasicCircle])
 	return &SimulationContext[*BasicCircle]{
 		State:     state_,
 		iteration: 1,
