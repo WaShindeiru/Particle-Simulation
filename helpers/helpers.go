@@ -29,3 +29,7 @@ func (v *MyVect2) MulScalar(scalar float64) *MyVect2 {
 func (v *MyVect2) Dot(other *MyVect2) float64 {
 	return v.Vector2.Dot(&other.Vector2)
 }
+
+type Copiable interface {
+	Copy() Copiable
+}
